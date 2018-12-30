@@ -50,7 +50,7 @@ object ResolveHints {
   class ResolveBroadcastHints(conf: SQLConf) extends Rule[LogicalPlan] {
     private val BROADCAST_HINT_NAMES = Set("BROADCAST", "BROADCASTJOIN", "MAPJOIN")
 
-    // SKEWED_JOIN(join_pair(left.field, right.field), skewed_keys('key1', 'key2'))
+    // SKEWED_JOIN(join_key(left.field, right.field), skewed_values('value1', 'value2'))
     private val SKEWED_JOIN = "SKEWED_JOIN"
 
     def resolver: Resolver = conf.resolver
@@ -105,26 +105,26 @@ object ResolveHints {
       val newNode = CurrentOrigin.withOrigin(plan.origin) {
         plan match {
           case Join(left, right, joinType, condition) if condition.isDefined =>
-            val joinPair = skewedJoin.joinPair
+            val joinKey = skewedJoin.joinKey
             val hasLeftTb = left.find { lp =>
                   lp.isInstanceOf[UnresolvedRelation] &&
-                  lp.asInstanceOf[UnresolvedRelation].tableName == joinPair.leftTable
+                  lp.asInstanceOf[UnresolvedRelation].tableName == joinKey.leftTable
                 }.isDefined
 
             val hasRightTb = right.find { lp =>
                   lp.isInstanceOf[UnresolvedRelation] &&
-                  lp.asInstanceOf[UnresolvedRelation].tableName == joinPair.rightTable
+                  lp.asInstanceOf[UnresolvedRelation].tableName == joinKey.rightTable
                 }.isDefined
 
-            val leftField = getTbAlias(left, joinPair.leftTable) + joinPair.leftField
-            val rightField = getTbAlias(right, joinPair.rightTable) + joinPair.rightField
+            val leftField = getTbAlias(left, joinKey.leftTable) + joinKey.leftField
+            val rightField = getTbAlias(right, joinKey.rightTable) + joinKey.rightField
             val joinKeys = condition.get.map(expr => expr)
                   .filter(_.isInstanceOf[UnresolvedAttribute])
                   .map(_.asInstanceOf[UnresolvedAttribute].name)
-                  .filter(n => n.endsWith(joinPair.leftField) || n.endsWith(joinPair.rightField))
+                  .filter(n => n.endsWith(joinKey.leftField) || n.endsWith(joinKey.rightField))
 
             val newPlan = if (hasLeftTb && hasRightTb && joinKeys.length >= 2) {
-              val inList = skewedJoin.skewedKeys.map(Literal(_))
+              val inList = skewedJoin.skewedValues.map(Literal(_))
               val left1 = Filter(Not(In(UnresolvedAttribute(leftField), inList)), left)
               val right1 = Filter(Not(In(UnresolvedAttribute(rightField), inList)), right)
               val left2 = Filter(In(UnresolvedAttribute(leftField), inList), left)
@@ -181,12 +181,12 @@ object ResolveHints {
             case unsupported => throw new AnalysisException("SKEWED hint parameter should be" +
               s" Function but was $unsupported (${unsupported.getClass}")
           }.toMap
-          val joinPair = paramMap.get("join_pair")
-          val skewedKeys = paramMap.get("skewed_keys")
-          if (joinPair.nonEmpty && joinPair.get.length == 2
-            && skewedKeys.nonEmpty && skewedKeys.get.length > 0) {
+          val joinKey = paramMap.get("join_key")
+          val skewedValues = paramMap.get("skewed_values")
+          if (joinKey.nonEmpty && joinKey.get.length == 2
+            && skewedValues.nonEmpty && skewedValues.get.length > 0) {
             applySkewedJoinHint(h.child,
-              SkewedJoin(JoinPair(joinPair.get(0), joinPair.get(1)), skewedKeys.get))
+              SkewedJoin(JoinKey(joinKey.get(0), joinKey.get(1)), skewedValues.get))
           } else {
             ResolvedHint(h.child)
           }
@@ -205,11 +205,11 @@ object ResolveHints {
     }
   }
 
-  case class JoinPair(leftTbField: String, rightTbField: String) {
+  case class JoinKey(leftTbField: String, rightTbField: String) {
     val leftTable: String = leftTbField.split("\\.")(0)
     val leftField: String = leftTbField.split("\\.")(1)
     val rightTable: String = rightTbField.split("\\.")(0)
     val rightField: String = rightTbField.split("\\.")(1)
   }
-  case class SkewedJoin(joinPair: JoinPair, skewedKeys: Seq[String])
+  case class SkewedJoin(joinKey: JoinKey, skewedValues: Seq[String])
 }
