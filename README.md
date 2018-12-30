@@ -79,3 +79,5 @@ A: 这种拆解Join最终的执行结果与原Join的结果一致吗？
 Q: SKEWED_JOIN hint只是把导致倾斜的某几个value单独过滤出来做Inner Join, 最后再做Union，理论上不会影响执行结果
 
 
+# 简书
+[https://www.jianshu.com/p/ea52f3801d7b]
