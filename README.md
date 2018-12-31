@@ -73,6 +73,9 @@ Project [f1#1, f2#2, f3#4, f4#5]
 
 从plan我们可以看到SKEWED_JOIN hint帮我们把语法树拆解成两Join,并且把导致倾斜的值过滤出来单独做MAPJOIN,最后再做了Union
 
+# 执行效果
+![alt image](https://github.com/frb502/spark-skewed-join-hint/blob/master/pics/pci-001.png?raw=true)
+
 # FAQ
 A: 这种拆解Join最终的执行结果与原Join的结果一致吗？
 
