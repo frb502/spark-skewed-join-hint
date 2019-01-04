@@ -7,9 +7,9 @@
 # 使用自定义hint
 处理Join导致的数据倾斜常规方式是对导致倾斜的keys做单独处理，最后在做union， 但问题来了，使用SQL如何处理？
 这时我们自定义hint就派上用场了,自定义hint需要扩展ResolveHints解析器的逻辑，修改也比较简单，详细请参见GitHub上源码
-我这边自定义的hint为SKEWED_JOIN用法：
-
-**SKEWED_JOIN(join_key(leftTB.field, rightTB.field), skewed_values('value1', 'value2'))**
+我这边自定义的hint为SKEWED_JOIN。
+用法如下：
+```SKEWED_JOIN(join_key(leftTB.field, rightTB.field), skewed_values('value1', 'value2'))```
 
 假如我们有SQL：
 ```SELECT f1, f2, f3, f4 FROM leftTB t1 LEFT JOIN rightTB t2 on t1.id=t2.id ```
