@@ -6,7 +6,10 @@
 
 # 使用自定义hint
 处理Join导致的数据倾斜常规方式是对导致倾斜的keys做单独处理，最后在做union， 但问题来了，使用SQL如何处理？
-这是我们的skewed-join-hint就派上用场了
+这时我们自定义hint就派上用场了,自定义hint需要扩展ResolveHints解析器的逻辑，修改也比较简单，详细请参见GitHub上源码
+我这边自定义的hint为SKEWED_JOIN用法：
+
+**SKEWED_JOIN(join_key(leftTB.field, rightTB.field), skewed_values('value1', 'value2'))**
 
 假如我们有SQL：
 ```SELECT f1, f2, f3, f4 FROM leftTB t1 LEFT JOIN rightTB t2 on t1.id=t2.id ```
@@ -31,11 +34,7 @@ Project [f1#1, f2#2, f3#4, f4#5]
 ```
 
 由于 leftTB.id列的数值 5和6非常多，这样就会导致数据处理倾斜（注：rightTB.id列的数值分布正常，如果不正常是另一种场景, 数据膨胀）
-这是我们使用skewed-join-hint来处理数据倾斜
-
-用法：
-
-**SKEWED_JOIN(join_key(leftTB.field, rightTB.field), skewed_values('value1', 'value2'))**
+这是我们使用自定义hint来处理数据倾斜
 
 现在SQL：
 
