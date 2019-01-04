@@ -14,11 +14,11 @@
 假如我们有SQL：
 ```SELECT f1, f2, f3, f4 FROM leftTB t1 LEFT JOIN rightTB t2 on t1.id=t2.id ```
 
-leftTB数据量：1亿
+leftTB数据量：```1亿```
 
-rightTB数据量：5000万
+rightTB数据量：```5000万```
 
-关联key: leftTB.id =  rightTB.id
+关联key: ```leftTB.id =  rightTB.id```
 
 解析后的plan:
 
