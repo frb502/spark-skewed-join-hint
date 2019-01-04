@@ -9,6 +9,7 @@
 这时我们自定义hint就派上用场了,自定义hint需要扩展ResolveHints解析器的逻辑，修改也比较简单，详细请参见GitHub上源码
 我这边自定义的hint为SKEWED_JOIN。
 用法如下：
+
 ```SKEWED_JOIN(join_key(leftTB.field, rightTB.field), skewed_values('value1', 'value2'))```
 
 假如我们有SQL：
