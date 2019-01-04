@@ -4,7 +4,7 @@
 开启MAPJOIN； BUT，如果两张表数据量都很大的话，MAPJOIN就无能为力了。
 
 
-# spark-skewed-join-hint
+# 使用自定义hint
 处理Join导致的数据倾斜常规方式是对导致倾斜的keys做单独处理，最后在做union， 但问题来了，使用SQL如何处理？
 这是我们的skewed-join-hint就派上用场了
 
